@@ -1,4 +1,4 @@
-// Platanus Hack 26 — Bogotá Edition
+// Platanus Hack 26 — Caracas Edition
 // Two-player brick duel. Dash with Button 1, break the word, keep your paddle alive.
 
 const GAME_WIDTH = 800;
@@ -619,7 +619,7 @@ function createStartScreen(scene) {
       .setOrigin(0.5),
   );
   const titleMain = scene.add
-    .text(GAME_WIDTH / 2, 150, 'BOGOTÁ EDITION', {
+    .text(GAME_WIDTH / 2, 150, 'CARACAS EDITION', {
       fontFamily: 'monospace', fontSize: '38px', color: '#e1ff00', fontStyle: 'bold',
     })
     .setOrigin(0.5);
@@ -899,59 +899,24 @@ function createBall(scene, x, y, color, startingOwner) {
 function buildTextBricks(scene) {
   scene.playfield.bricks.clear(true, true);
 
-  // Hand-drawn 4×7 pixel font, grid 34×28, CELL_W=20 CELL_H=12
-  // brickX = 60 + col*20 + 9   brickY = 132 + row*12 + 5
-  // BOGOTA rows 10-16 (letter_col: B=2 O=7 G=12 O=17 T=22 A=27)
-  const brickData = [
-    // B
-    [109,257,2],[129,257,3],[149,257,0],
-    [109,269,3],[169,269,2],
-    [109,281,0],[169,281,3],
-    [109,293,1],[129,293,2],[149,293,3],
-    [109,305,2],[169,305,1],
-    [109,317,3],[169,317,2],
-    [109,329,0],[129,329,1],[149,329,2],
-    // O
-    [229,257,3],[249,257,0],
-    [209,269,3],[269,269,2],
-    [209,281,0],[269,281,3],
-    [209,293,1],[269,293,0],
-    [209,305,2],[269,305,1],
-    [209,317,3],[269,317,2],
-    [229,329,1],[249,329,2],
-    // G
-    [329,257,0],[349,257,1],[369,257,2],
-    [309,269,3],
-    [309,281,0],
-    [309,293,1],[349,293,2],[369,293,3],
-    [309,305,0],[369,305,1],
-    [309,317,2],[369,317,3],
-    [329,329,0],[349,329,1],[369,329,2],
-    // O
-    [429,257,3],[449,257,0],
-    [409,269,3],[469,269,2],
-    [409,281,0],[469,281,3],
-    [409,293,1],[469,293,0],
-    [409,305,2],[469,305,1],
-    [409,317,3],[469,317,2],
-    [429,329,1],[449,329,2],
-    // T
-    [509,257,0],[529,257,1],[549,257,2],[569,257,3],
-    [529,269,0],[549,269,1],
-    [529,281,2],[549,281,3],
-    [529,293,0],[549,293,1],
-    [529,305,2],[549,305,3],
-    [529,317,0],[549,317,1],
-    [529,329,2],[549,329,3],
-    // A
-    [629,257,2],[649,257,3],
-    [609,269,2],[669,269,1],
-    [609,281,3],[669,281,2],
-    [609,293,0],[629,293,1],[649,293,2],[669,293,3],
-    [609,305,1],[669,305,0],
-    [609,317,2],[669,317,1],
-    [609,329,3],[669,329,2],
-  ];
+  // CARACAS in a 4×7 pixel font, centered across the cabinet playfield.
+  const letters = {
+    C: ['0111', '1000', '1000', '1000', '1000', '1000', '0111'],
+    A: ['0110', '1001', '1001', '1111', '1001', '1001', '1001'],
+    R: ['1110', '1001', '1001', '1110', '1010', '1001', '1001'],
+    S: ['0111', '1000', '1000', '0110', '0001', '0001', '1110'],
+  };
+  const brickData = [];
+  for (let letter = 0; letter < 7; letter++) {
+    const pixels = letters['CARACAS'[letter]];
+    for (let row = 0; row < 7; row++) {
+      for (let col = 0; col < 4; col++) {
+        if (pixels[row][col] === '1') {
+          brickData.push([70 + (letter * 5 + col) * 20, 257 + row * 12, (letter + row + col) % 4]);
+        }
+      }
+    }
+  }
 
   const colors = [COLORS.brickA, COLORS.brickB, COLORS.brickC, COLORS.brickD];
 
