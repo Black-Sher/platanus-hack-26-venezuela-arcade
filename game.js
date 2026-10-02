@@ -7,6 +7,7 @@
 
 const GW = 800;
 const GH = 600;
+const rnd = (a, b) => rnd(a, b);
 const FF = 'Courier,monospace';
 const STORAGE_KEY = 'cyber_caracas_scores';
 const HORIZON_Y = 225;
@@ -47,6 +48,7 @@ for (const [code, keys] of Object.entries(CABINET_KEYS)) {
   }
 }
 
+const ALL_PHASES = ['strafe', 'shoot', 'spread', 'shield', 'burst', 'snipe', 'rain', 'charge'];
 const WORLDS = [
   {
     id: 1,
@@ -62,7 +64,6 @@ const WORLDS = [
     sky: 0x07152d,
     ground: 0x0d2818,
     road: 0x222632,
-    bossPhases: ['strafe', 'shoot']
   },
   {
     id: 2,
@@ -78,7 +79,6 @@ const WORLDS = [
     sky: 0x180d28,
     ground: 0x1f1b29,
     road: 0x282333,
-    bossPhases: ['strafe', 'shoot', 'spread']
   },
   {
     id: 3,
@@ -94,7 +94,6 @@ const WORLDS = [
     sky: 0x071b26,
     ground: 0x0d1f2b,
     road: 0x182633,
-    bossPhases: ['strafe', 'shoot', 'spread', 'shield']
   },
   {
     id: 4,
@@ -110,7 +109,6 @@ const WORLDS = [
     sky: 0x150b28,
     ground: 0x110f1c,
     road: 0x1a1824,
-    bossPhases: ['strafe', 'shoot', 'spread', 'shield', 'burst']
   },
   {
     id: 5,
@@ -126,7 +124,6 @@ const WORLDS = [
     sky: 0x05080f,
     ground: 0x0a1018,
     road: 0x121822,
-    bossPhases: ['strafe', 'shoot', 'spread', 'shield', 'burst', 'snipe']
   },
   {
     id: 6,
@@ -142,7 +139,6 @@ const WORLDS = [
     sky: 0x04140c,
     ground: 0x021a0c,
     road: 0x071f12,
-    bossPhases: ['strafe', 'shoot', 'spread', 'shield', 'burst', 'snipe', 'rain']
   },
   {
     id: 7,
@@ -158,10 +154,12 @@ const WORLDS = [
     sky: 0x220c1c,
     ground: 0x160812,
     road: 0x1f101a,
-    bossPhases: ['strafe', 'shoot', 'spread', 'shield', 'burst', 'snipe', 'rain', 'charge']
   }
 ];
-WORLDS.forEach(w => w.sHex = '#' + w.sColor.toString(16).padStart(6, '0'));
+WORLDS.forEach(w => {
+  w.sHex = '#' + w.sColor.toString(16).padStart(6, '0');
+  w.bossPhases = ALL_PHASES.slice(0, w.id + 1);
+});
 
 const LETTER_GRID = ['ABCDEFG'.split(''),'HIJKLMN'.split(''),'OPQRSTU'.split(''),'VWXYZ.-'.split(''),['DEL','END']];
 
@@ -515,10 +513,10 @@ function buildEnvironment(s) {
   s.ptcls = [];
   for (let i = 0; i < 24; i++) {
     s.ptcls.push({
-      x: Phaser.Math.Between(0, GW),
-      y: Phaser.Math.Between(HORIZON_Y, GH),
-      sp: Phaser.Math.Between(6, 14),
-      sz: Phaser.Math.Between(1, 3),
+      x: rnd(0, GW),
+      y: rnd(HORIZON_Y, GH),
+      sp: rnd(6, 14),
+      sz: rnd(1, 3),
       alpha: Phaser.Math.FloatBetween(0.2, 0.6)
     });
   }
@@ -1140,18 +1138,18 @@ function update(time, delta) {
       if (dmgRatio > 0.2) {
         // Light grey engine smoke
         if (Math.random() < 0.38) {
-          spawnSmoke(s, s.boss.x + Phaser.Math.Between(-14, 14), s.boss.y + 14, 0x555555, 1, false);
+          spawnSmoke(s, s.boss.x + rnd(-14, 14), s.boss.y + 14, 0x555555, 1, false);
         }
       }
       if (dmgRatio > 0.5) {
         // Thick charcoal smoke + fiery embers
-        spawnSmoke(s, s.boss.x + Phaser.Math.Between(-12, 12), s.boss.y + 16, 0x181818, 1, true);
+        spawnSmoke(s, s.boss.x + rnd(-12, 12), s.boss.y + 16, 0x181818, 1, true);
         if (Math.random() < 0.35) {
           s.smokeParticles.push({
-            x: s.boss.x + Phaser.Math.Between(-8, 8),
+            x: s.boss.x + rnd(-8, 8),
             y: s.boss.y + 18,
-            vx: Phaser.Math.Between(-30, 30),
-            vy: Phaser.Math.Between(50, 110),
+            vx: rnd(-30, 30),
+            vy: rnd(50, 110),
             size: 3,
             growth: -2,
             alpha: 1,
@@ -1331,7 +1329,7 @@ function updateRoad(s, delta, time) {
     p.y += p.sp + spd * 14;
     if (p.y > GH) {
       p.y = HORIZON_Y + 4;
-      p.x = Phaser.Math.Between(GW / 2 - ROAD_TW / 2, GW / 2 + ROAD_TW / 2);
+      p.x = rnd(GW / 2 - ROAD_TW / 2, GW / 2 + ROAD_TW / 2);
     }
     s.ptclG.fillStyle(w.sColor, p.alpha);
     s.ptclG.fillRect(p.x, p.y, p.sz, p.sz * 4);
@@ -1991,7 +1989,7 @@ function bossAttack(s, w) {
       bus.body.setSize(48, 62);
       bus.setVelocityY(230 + w.id * 18);
     } else {
-      const h = s.obstacles.create(s.boss.x + Phaser.Math.Between(-40, 40), s.boss.y + 35, 'hole');
+      const h = s.obstacles.create(s.boss.x + rnd(-40, 40), s.boss.y + 35, 'hole');
       h.body.setSize(38, 22);
       h.setVelocityY(260 + w.id * 18);
     }
@@ -2025,8 +2023,8 @@ function bossAttack(s, w) {
     for (let i = 0; i < 3; i++) {
       s.time.delayedCall(i * 110, () => {
         if (s.bHp > 0 && !s.st.escaping) {
-          const rx = Phaser.Math.Between(260, 540);
-          fireEnemyBullet(s, rx, s.boss.y + 20, Phaser.Math.Between(-50, 50), 320 + w.id * 14);
+          const rx = rnd(260, 540);
+          fireEnemyBullet(s, rx, s.boss.y + 20, rnd(-50, 50), 320 + w.id * 14);
         }
       });
     }
@@ -2052,12 +2050,12 @@ function fireEnemyBullet(s, x, y, vx, vy, snipe) {
 function spawnSmoke(s, x, y, color, count, isThick) {
   for (let i = 0; i < count; i++) {
     s.smokeParticles.push({
-      x: x + Phaser.Math.Between(-14, 14),
-      y: y + Phaser.Math.Between(-6, 6),
-      vx: Phaser.Math.Between(-35, 35),
-      vy: Phaser.Math.Between(45, 115),
-      size: isThick ? Phaser.Math.Between(8, 16) : Phaser.Math.Between(5, 9),
-      growth: Phaser.Math.Between(18, 28),
+      x: x + rnd(-14, 14),
+      y: y + rnd(-6, 6),
+      vx: rnd(-35, 35),
+      vy: rnd(45, 115),
+      size: isThick ? rnd(8, 16) : rnd(5, 9),
+      growth: rnd(18, 28),
       alpha: isThick ? 0.85 : 0.6,
       decay: Phaser.Math.FloatBetween(0.8, 1.3),
       color: color || 0x222222,
@@ -2070,11 +2068,11 @@ function spawnHitFX(s, x, y) {
   // Orange / Yellow fiery sparks
   for (let i = 0; i < 6; i++) {
     s.smokeParticles.push({
-      x: x + Phaser.Math.Between(-6, 6),
-      y: y + Phaser.Math.Between(-6, 6),
-      vx: Phaser.Math.Between(-100, 100),
-      vy: Phaser.Math.Between(-50, 90),
-      size: Phaser.Math.Between(2, 4),
+      x: x + rnd(-6, 6),
+      y: y + rnd(-6, 6),
+      vx: rnd(-100, 100),
+      vy: rnd(-50, 90),
+      size: rnd(2, 4),
       growth: -2,
       alpha: 1.0,
       decay: 3.5,
@@ -2236,7 +2234,7 @@ function damageBoss(s, amt) {
   s.st.score += 25 * amt;
 
   // Boss recoil shake on hit
-  s.boss.x += Phaser.Math.Between(-4, 4);
+  s.boss.x += rnd(-4, 4);
 
   // Red flash tint
   s.boss.setTint(0xff3344);
@@ -2245,7 +2243,7 @@ function damageBoss(s, amt) {
   });
 
   // Always spawn smoke and sparks on hit!
-  spawnHitFX(s, s.boss.x + Phaser.Math.Between(-10, 10), s.boss.y + 15);
+  spawnHitFX(s, s.boss.x + rnd(-10, 10), s.boss.y + 15);
   spawnSmoke(s, s.boss.x, s.boss.y + 10, 0x222222, 2, true);
 
   if (s.bHp <= 0) onBossDefeated(s);
@@ -2276,13 +2274,13 @@ function onBossDefeated(s) {
 
   // Big explosion of smoke and fire at boss position!
   for (let i = 0; i < 18; i++) {
-    spawnSmoke(s, s.boss.x + Phaser.Math.Between(-25, 25), s.boss.y + Phaser.Math.Between(-15, 15), 0x111111, 1, true);
+    spawnSmoke(s, s.boss.x + rnd(-25, 25), s.boss.y + rnd(-15, 15), 0x111111, 1, true);
     s.smokeParticles.push({
-      x: s.boss.x + Phaser.Math.Between(-20, 20),
-      y: s.boss.y + Phaser.Math.Between(-15, 15),
-      vx: Phaser.Math.Between(-120, 120),
-      vy: Phaser.Math.Between(-60, 120),
-      size: Phaser.Math.Between(3, 6),
+      x: s.boss.x + rnd(-20, 20),
+      y: s.boss.y + rnd(-15, 15),
+      vx: rnd(-120, 120),
+      vy: rnd(-60, 120),
+      size: rnd(3, 6),
       growth: -3,
       alpha: 1.0,
       decay: 2.0,
@@ -2322,9 +2320,9 @@ function onBossDefeated(s) {
         if (s.boss && s.boss.active) {
           spawnSmoke(s, s.boss.x, s.boss.y + 15, 0x1a1a1a, 2, true);
           s.smokeParticles.push({
-            x: s.boss.x + Phaser.Math.Between(-8, 8),
+            x: s.boss.x + rnd(-8, 8),
             y: s.boss.y + 20,
-            vx: Phaser.Math.Between(-20, 20),
+            vx: rnd(-20, 20),
             vy: 90,
             size: 4,
             growth: -2,
