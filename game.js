@@ -7,7 +7,7 @@
 
 const GW = 800;
 const GH = 600;
-const rnd = (a, b) => rnd(a, b);
+const rnd = (a, b) => Phaser.Math.Between(a, b);
 const FF = 'Courier,monospace';
 const STORAGE_KEY = 'cyber_caracas_scores';
 const HORIZON_Y = 225;
