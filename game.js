@@ -52,7 +52,6 @@ const WORLDS = [
     id: 1,
     name: 'AUTOPISTA FAJARDO',
     short: 'FAJARDO',
-    sign: 'DISTRIBUIDOR ALTAMIRA -> AUTOPISTA FAJARDO',
     type: 'fajardo',
     sponsor: 'YUMMY',
     sColor: 0xffd200,
@@ -69,7 +68,6 @@ const WORLDS = [
     id: 2,
     name: 'BOULEVARD SABANA GRANDE',
     short: 'SABANA GDE',
-    sign: 'GRAN CAFE -> TORRE LA PREVISORA',
     type: 'boulevard',
     sponsor: 'CASHEA',
     sColor: 0x00e5a3,
@@ -86,7 +84,6 @@ const WORLDS = [
     id: 3,
     name: 'LAS MERCEDES & CHACAO',
     short: 'LAS MERCEDES',
-    sign: 'PLAZA ALFREDO SADEL -> LAS MERCEDES',
     type: 'chacao',
     sponsor: 'KAPSO',
     sColor: 0x25d366,
@@ -103,7 +100,6 @@ const WORLDS = [
     id: 4,
     name: 'TORRES PARQUE CENTRAL',
     short: 'P. CENTRAL',
-    sign: 'TORRES GEMELAS -> PARQUE CENTRAL',
     type: 'parquecentral',
     sponsor: 'ELEVENLABS',
     sColor: 0xffffff,
@@ -120,7 +116,6 @@ const WORLDS = [
     id: 5,
     name: 'TUNEL BOQUERON 1 (LA GUAIRA)',
     short: 'BOQUERON',
-    sign: 'AUTOPISTA CARACAS-LA GUAIRA -> TUNEL BOQUERON',
     type: 'tunnel',
     sponsor: 'VERCEL',
     sColor: 0x00f0ff,
@@ -137,7 +132,6 @@ const WORLDS = [
     id: 6,
     name: 'NUBE DE SERVIDORES',
     short: 'DATACENTER',
-    sign: 'SOBERANIA DE DATOS -> SERVIDORES LOCALES',
     type: 'datacenter',
     sponsor: 'RENDER',
     sColor: 0x46e3b7,
@@ -154,7 +148,6 @@ const WORLDS = [
     id: 7,
     name: 'EL AVILA - HOTEL HUMBOLDT',
     short: 'HUMBOLDT',
-    sign: 'WARAIRA REPANO -> HOTEL HUMBOLDT (CIMA)',
     type: 'humboldt',
     sponsor: 'ANTHROPIC',
     sColor: 0xf59e0b,
@@ -514,18 +507,6 @@ function buildEnvironment(s) {
     });
   }
   s.sceneryG = s.add.graphics();
-
-  // Highway sign container
-  s.signCont = s.add.container(GW / 2, -60).setDepth(4);
-  const sgBg = s.add.graphics();
-  sgBg.fillStyle(0x14532d, 0.95);
-  sgBg.fillRoundedRect(-180, -22, 360, 44, 6);
-  sgBg.lineStyle(3, 0xffffff, 0.9);
-  sgBg.strokeRoundedRect(-178, -20, 356, 40, 6);
-  s.signTxt = s.add.text(0, 0, 'AUTOPISTA FAJARDO', {
-    fontFamily: FF, fontSize: '15px', color: '#ffffff', fontStyle: 'bold'
-  }).setOrigin(0.5);
-  s.signCont.add([sgBg, s.signTxt]);
 
   // Cable car wire & cabin for Humboldt
   s.cableG = s.add.graphics();
@@ -1090,8 +1071,6 @@ function loadWorld(s, idx) {
   s.skyBg.setFillStyle(w.sky);
   renderLandmark(s, w);
 
-  s.signTxt.setText(w.sign);
-  s.signCont.y = -65;
   s.banner.setVisible(false);
 
   s.bMaxHp = w.bossHp;
@@ -1330,10 +1309,6 @@ function updateRoad(s, delta, time) {
       scG.fillRect(edgeX - bw / 2 + 4 * scale, y - bh - 20 * scale, bw - 8 * scale, 6 * scale);
     }
   }
-
-  // Scroll Highway Sign overhead
-  s.signCont.y += spd * 38;
-  if (s.signCont.y > GH + 100) s.signCont.y = -80;
 
   // Humboldt Cable Car
   if (w.type === 'humboldt') {
