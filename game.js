@@ -6,6 +6,7 @@
 // Sponsors: YUMMY * CASHEA * KAPSO * ELEVENLABS * VERCEL * RENDER * ANTHROPIC
 // ============================================================================
 
+(() => {
 const GW = 800;
 const GH = 600;
 const rnd = (a, b) => Phaser.Math.Between(a, b);
@@ -2551,3 +2552,4 @@ async function saveScore(name, score) {
   } catch (e) {}
   return [];
 }
+})();
