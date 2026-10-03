@@ -1,6 +1,7 @@
 // ============================================================================
 // CYBER-CARACAS: HACKER CHASE - OUT RUN 2D ARCADE
 // Platanus Hack 26: Caracas Edition
+// Creado por Sherdani (Black-Sher)
 // El Hacker Etico en moto VS El Ciberdelincuente en auto blindado
 // Sponsors: YUMMY * CASHEA * KAPSO * ELEVENLABS * VERCEL * RENDER * ANTHROPIC
 // ============================================================================
@@ -688,6 +689,16 @@ function buildHud(s) {
   }).setOrigin(1, 0).setDepth(16);
 }
 
+function setHudVisible(s, v) {
+  if (!s.hud) return;
+  for (const k in s.hud) {
+    if (s.hud[k] && s.hud[k].setVisible) s.hud[k].setVisible(v);
+  }
+  if (s.hud.routeNodes) {
+    for (const n of s.hud.routeNodes) if (n.text) n.text.setVisible(v);
+  }
+}
+
 function refreshHud(s) {
   const wi = s.st.worldIdx;
   const w = WORLDS[wi] || WORLDS[0];
@@ -814,17 +825,54 @@ function refreshHud(s) {
 function buildModals(s) {
   s.mods = {};
 
-  // 1. TITLE SCREEN
+  // 1. TITLE SCREEN (Full Screen Coverage & El Avila Relief)
   const tc = s.add.container(0, 0).setDepth(30);
-  const tbg = s.add.rectangle(GW / 2, GH / 2, 780, 560, 0x030814, 0.98).setStrokeStyle(3, 0x00f0ff, 1);
-  const tTop = s.add.rectangle(GW / 2, 60, 780, 56, 0x061836, 1);
-  const tHdr = s.add.text(GW / 2, 42, 'PLATANUS HACK 26: CARACAS EDITION', {
-    fontFamily: FF, fontSize: '17px', color: '#ffd200', fontStyle: 'bold'
+  const tbg = s.add.rectangle(GW / 2, GH / 2, GW, GH, 0x020612, 1);
+  const tBorder = s.add.rectangle(GW / 2, GH / 2, 782, 582, 0x000000, 0).setStrokeStyle(2, 0x00f0ff, 0.85);
+
+  // Stylized Synthwave Relief of El Avila (Waraira Repano) behind title
+  const tAvilaG = s.add.graphics();
+  // Sunset Dusk Bands
+  tAvilaG.fillStyle(0x0a1128, 1); tAvilaG.fillRect(8, 76, 784, 108);
+  tAvilaG.fillStyle(0x2d0b4e, 0.65); tAvilaG.fillRect(8, 98, 784, 86);
+  tAvilaG.fillStyle(0x701a75, 0.45); tAvilaG.fillRect(8, 120, 784, 64);
+  tAvilaG.fillStyle(0xf43f5e, 0.25); tAvilaG.fillRect(8, 142, 784, 42);
+
+  const rM = [[8, 184], [8, 150], [130, 98], [240, 130], [400, 74], [470, 108], [590, 86], [700, 128], [792, 140], [792, 184]];
+  const rF = [[8, 184], [8, 160], [160, 130], [330, 152], [500, 124], [660, 146], [792, 156], [792, 184]];
+  const dPath = (pts, fill, stroke) => {
+    tAvilaG.beginPath();
+    pts.forEach(([x, y], i) => (i ? tAvilaG.lineTo(x, y) : tAvilaG.moveTo(x, y)));
+    if (fill) { tAvilaG.closePath(); tAvilaG.fillPath(); }
+    if (stroke) tAvilaG.strokePath();
+  };
+  tAvilaG.fillStyle(0x0b132b, 1); dPath(rM, true, false);
+  tAvilaG.fillStyle(0x050a16, 1); dPath(rF, true, false);
+  tAvilaG.lineStyle(2, 0x00f0ff, 0.9); dPath(rM.slice(1, -1), false, true);
+
+  // Radiant Cruz del Avila glowing atop La Silla
+  tAvilaG.fillStyle(0xfff59d, 0.4);
+  tAvilaG.fillCircle(400, 70, 16);
+  tAvilaG.fillStyle(0xffffff, 1);
+  tAvilaG.fillRect(398, 60, 4, 18);
+  tAvilaG.fillRect(393, 65, 14, 4);
+
+  // Antenna beacons blinking red
+  tAvilaG.fillStyle(0xff0055, 1);
+  tAvilaG.fillCircle(130, 96, 2.5);
+  tAvilaG.fillCircle(590, 84, 2.5);
+
+  const tTop = s.add.rectangle(GW / 2, 54, 782, 48, 0x061836, 1);
+  const tHdr = s.add.text(GW / 2, 40, 'PLATANUS HACK 26: CARACAS EDITION', {
+    fontFamily: FF, fontSize: '15px', color: '#ffd200', fontStyle: 'bold'
+  }).setOrigin(0.5);
+  const tAuth = s.add.text(GW / 2, 61, 'DESARROLLADO POR SHERDANI (BLACK-SHER)', {
+    fontFamily: FF, fontSize: '11px', color: '#00f0ff', fontStyle: 'bold'
   }).setOrigin(0.5);
 
-  const tTit = s.add.text(GW / 2, 116, 'CYBER-CARACAS\nHACKER CHASE', {
+  const tTit = s.add.text(GW / 2, 126, 'CYBER-CARACAS\nHACKER CHASE', {
     fontFamily: FF, fontSize: '38px', color: '#00f0ff',
-    align: 'center', fontStyle: 'bold', stroke: '#002244', strokeThickness: 4
+    align: 'center', fontStyle: 'bold', stroke: '#001830', strokeThickness: 5
   }).setOrigin(0.5);
 
   const tStBox = s.add.rectangle(GW / 2, 245, 710, 120, 0x08172c, 0.92).setStrokeStyle(1, 0x1d3a60);
@@ -856,7 +904,7 @@ function buildModals(s) {
       fontFamily: FF, fontSize: '10px', color: '#7ea2ce', align: 'center'
     }).setOrigin(0.5);
 
-  tc.add([tbg, tTop, tHdr, tTit, tStBox, tSt, tSpBox, tSp, tWarn, tPrmt, tCtrl]);
+  tc.add([tbg, tBorder, tAvilaG, tTop, tHdr, tAuth, tTit, tStBox, tSt, tSpBox, tSp, tWarn, tPrmt, tCtrl]);
   s.mods.title = tc;
 
   // 2. WORLD COMPLETE & SPONSOR POWER UNLOCKED
@@ -901,7 +949,7 @@ function buildModals(s) {
   s.tweens.add({ targets: wcPrmt, alpha: 0.25, duration: 550, yoyo: true, repeat: -1 });
 
   wc.add([wcBg, wcTop, wcTit, wcSub, wcCard, wcSpTxt, wcPn, wcPd, wcInst, wcPwrLbl, wcPwrList, wcPrmt]);
-  s.mods.wc = { cont: wc, sp: wcSpTxt, pn: wcPn, pd: wcPd, bg: wcBg, pwrList: wcPwrList };
+  s.mods.wc = { cont: wc, sp: wcSpTxt, pn: wcPn, pd: wcPd, bg: wcBg, pwrList: wcPwrList, sub: wcSub };
 
   // 3. VICTORY GRAND FINALE
   const vc = s.add.container(0, 0).setVisible(false).setDepth(30);
@@ -920,7 +968,7 @@ function buildModals(s) {
     '¡UN ENORME AGRADECIMIENTO A PLATANUS HACK 26: CARACAS!\n' +
     'Y A TODOS LOS EXTRAORDINARIOS SPONSORS:\n\n' +
     '  ANTHROPIC * YUMMY * CASHEA * ELEVENLABS * KAPSO * VERCEL * RENDER  \n\n' +
-    '  ¡GRACIAS POR IMPULSAR EL TALENTO Y LA TECNOLOGIA EN VENEZUELA!  ', {
+    '  ¡DESARROLLADO POR SHERDANI (BLACK-SHER) CON ORGULLO VENEZOLANO!  ', {
       fontFamily: FF, fontSize: '12px', color: '#c4ddff', align: 'center', fontStyle: 'bold', lineSpacing: 4
     }).setOrigin(0.5);
 
@@ -1017,6 +1065,7 @@ function normKey(k) {
 // ----------------------------------------------------------------------------
 function showTitle(s) {
   s.st.phase = 'title';
+  setHudVisible(s, false);
   s.mods.title.setVisible(true);
   s.mods.wc.cont.setVisible(false);
   s.mods.vic.cont.setVisible(false);
@@ -1031,6 +1080,7 @@ function showTitle(s) {
 
 function startGame(s) {
   s.st.phase = 'playing';
+  setHudVisible(s, true);
   s.st.worldIdx = 0;
   s.st.score = 0;
   s.st.lives = 3;
@@ -2354,10 +2404,16 @@ function onBossDefeated(s) {
       s.banner.setVisible(false);
       s.st.phase = 'world_complete';
 
+      if (s.st.lives < 4) {
+        s.st.lives++;
+      }
+      refreshHud(s);
+
       const m = s.mods.wc;
       m.sp.setText('!PODER ADQUIRIDO GRACIAS A ' + w.sponsor + '!').setColor(w.sHex);
       m.pn.setText(w.power.toUpperCase());
       m.pd.setText(w.pDesc);
+      m.sub.setText('¡MOTO REPARADA EN PIT STOP! +1 VIDA RECUPERADA (TOTAL: ' + s.st.lives + ' ♥)');
       m.bg.setStrokeStyle(3, w.sColor, 1);
 
       // Display accumulated sponsor tags
