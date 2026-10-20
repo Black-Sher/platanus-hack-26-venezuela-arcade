@@ -1093,6 +1093,7 @@ function startGame(s) {
   s.st.escaping = false;
   s.st.pwrType = null;
   s.st.pwrActiveUntil = 0;
+  s.st.startGrace = 0;
 
   s.mods.title.setVisible(false);
   s.mods.wc.cont.setVisible(false);
@@ -1120,8 +1121,6 @@ function loadWorld(s, idx) {
   s.skyBg.setFillStyle(w.sky);
   renderLandmark(s, w);
 
-  s.banner.setVisible(false);
-
   s.bMaxHp = w.bossHp;
   s.bHp = w.bossHp;
   s.bShieldHp = 0;
@@ -1131,6 +1130,11 @@ function loadWorld(s, idx) {
   s.bCurrentPhase = w.bossPhases[0];
   s.bPhaseIdx = 0;
 
+  // Grace period: 1.1s — boss visible, no attacks, player invulnerable
+  const graceEnd = s.time.now + 1100;
+  s.st.startGrace = graceEnd;
+  s.st.pInvulnUntil = graceEnd;
+
   // Boss placed ON THE ROAD ahead of player
   s.boss.setPosition(400, 320).setVelocity(0, 0).setVisible(true).clearTint().setScale(1.1).setAngle(0);
   s.bossShieldSpr.setVisible(false);
@@ -1138,6 +1142,12 @@ function loadWorld(s, idx) {
   s.obstacles.clear(true, true);
   s.pLasers.clear(true, true);
   s.eLasers.clear(true, true);
+
+  // Show countdown banner during grace
+  s.banner.setText('\u00a1PERSIGUE AL CIBERDELINCUENTE!  3...').setVisible(true);
+  s.time.delayedCall(400,  () => { if (s.st.startGrace > 0) s.banner.setText('\u00a1PERSIGUE AL CIBERDELINCUENTE!  2...'); });
+  s.time.delayedCall(750,  () => { if (s.st.startGrace > 0) s.banner.setText('\u00a1PERSIGUE AL CIBERDELINCUENTE!  1...'); });
+  s.time.delayedCall(1100, () => { s.st.startGrace = 0; s.banner.setVisible(false); });
 
   const hasK = s.st.powers.some(p => p.sponsor === 'KAPSO');
   s.kdrone.setVisible(hasK);
@@ -1300,10 +1310,10 @@ function updateRoad(s, delta, time) {
       { x: rx1, y: y1 }
     ], true);
 
-    // Dashed center lane lines
+    // Dashed center lane lines (tinted with sponsor color)
     if (i > 3 && segOff < 3) {
       const lw = 1.5 + t0 * 3.5;
-      g.fillStyle(0xffffff, 0.6);
+      g.fillStyle(w.sColor, 0.55);
       const lane1X0 = lx0 + rw0 * 0.33;
       const lane1X1 = lx1 + rw1 * 0.33;
       const lane2X0 = lx0 + rw0 * 0.67;
@@ -1318,6 +1328,15 @@ function updateRoad(s, delta, time) {
       ], true);
     }
   }
+
+  // 2.5 Neon wet-road reflection (central sponsor-colored trapezoid)
+  g.fillStyle(w.sColor, 0.07);
+  g.fillPoints([
+    { x: GW / 2 - ROAD_TW * 0.24, y: HORIZON_Y },
+    { x: GW / 2 + ROAD_TW * 0.24, y: HORIZON_Y },
+    { x: GW / 2 + ROAD_BW * 0.24, y: GH },
+    { x: GW / 2 - ROAD_BW * 0.24, y: GH }
+  ], true);
 
   // 3. Roadside elements (street lamps & sponsor cyber signs scrolling towards camera)
   const scG = s.sceneryG;
@@ -1807,6 +1826,7 @@ function renderLandmark(s, w) {
 // PLAYER CONTROLS & SPONSOR POWERS
 // ----------------------------------------------------------------------------
 function movePlayer(s, delta, time) {
+  const w = WORLDS[s.st.worldIdx] || WORLDS[0];
   let vx = 0, vy = 0;
   if (!s.st.escaping) {
     if (held(s, 'P1_L')) vx -= s.pSpeed;
@@ -1830,6 +1850,11 @@ function movePlayer(s, delta, time) {
   if (s.player.x > maxX) s.player.x = maxX;
   if (s.player.y < 420) s.player.y = 420;
   if (s.player.y > GH - 36) s.player.y = GH - 36;
+
+  // 1B: Exhaust glow — sponsor-colored spark when accelerating up or in turbo
+  if ((vy < 0 || s.st.pwrType === 'YUMMY') && Math.random() < 0.4) {
+    spawnSmoke(s, s.player.x + rnd(-7, 7), s.player.y + 33, w.sColor, 1, false);
+  }
 
   // Tire skid SFX on sharp turns
   if (Math.abs(vx) > 0 && Math.random() < 0.05 && (!s._lastSkid || time > s._lastSkid + 380)) {
@@ -1971,6 +1996,8 @@ function flashScreen(s, color, dur) {
 // ----------------------------------------------------------------------------
 function moveBoss(s, delta, time) {
   if (s.st.escaping) return;
+  // During grace period: boss moves but does NOT attack
+  const inGrace = s.st.startGrace > 0 && time < s.st.startGrace;
   const w = WORLDS[s.st.worldIdx] || WORLDS[0];
   const phases = w.bossPhases;
 
@@ -1989,6 +2016,9 @@ function moveBoss(s, delta, time) {
   if (hpPct < 0.2) {
     s.bCurrentPhase = phases[phases.length - 1];
   }
+
+  // 3C: Micro-vibration when critically damaged (< 30% HP)
+  if (hpPct < 0.3) s.boss.x += Math.sin(time / 52) * 2.2;
 
   // Lateral movement on the road
   const bspd = s.bCurrentPhase === 'charge' ? 320 : 185;
@@ -2021,9 +2051,9 @@ function moveBoss(s, delta, time) {
     s.bossShieldSpr.setPosition(s.boss.x, s.boss.y + 4).setAlpha(0.7 + Math.sin(time / 250) * 0.3);
   }
 
-  // Attack timer
+  // Attack timer (blocked during grace period)
   const interval = Math.max(1200 - w.id * 80, 420);
-  if (time >= s.bAtkCd) {
+  if (!inGrace && time >= s.bAtkCd) {
     s.bAtkCd = time + interval;
     bossAttack(s, w);
   }
@@ -2287,7 +2317,8 @@ function damageBoss(s, amt) {
   // Boss recoil shake on hit
   s.boss.x += rnd(-4, 4);
 
-  // Red flash tint
+  // 2A: Screen flash + Red tint on every boss hit
+  flashScreen(s, 0xff2200, 45);
   s.boss.setTint(0xff3344);
   s.time.delayedCall(80, () => {
     if (s.boss && s.boss.active) s.boss.clearTint();
